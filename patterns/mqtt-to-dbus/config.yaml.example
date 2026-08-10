@@ -1,0 +1,38 @@
+mqtt:
+  host: "mqtt-broker"
+  port: 1883
+  username: ""
+  password: ""
+  client_id: "mqtt-to-dbus-bridge"
+
+dbus:
+  service_name: "com.victronenergy.mqtt_sensor"
+  device_instance: 40
+  product_name: "MQTT Sensor Bridge"
+
+mappings:
+  - mqtt_topic: "homeassistant/sensor/living_room_temperature/state"
+    dbus_path: "/Temperature"
+    dbus_type: "double"
+    unit: "°C"
+    value_template: "{{ value_json.temperature }}"
+    default: 20.0
+
+  - mqtt_topic: "homeassistant/sensor/living_room_humidity/state"
+    dbus_path: "/Humidity"
+    dbus_type: "double"
+    unit: "%"
+    value_template: "{{ value_json.humidity }}"
+    default: 50.0
+
+  - mqtt_topic: "shelly/emeter/0/power"
+    dbus_path: "/Ac/Power"
+    dbus_type: "double"
+    unit: "W"
+    # No template needed - direct JSON value
+
+  - mqtt_topic: "custom/grid/meter"
+    dbus_path: "/Ac/L1/Voltage"
+    dbus_type: "double"
+    unit: "V"
+    value_template: "{{ value_json.voltage }}"

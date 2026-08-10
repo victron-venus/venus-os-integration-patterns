@@ -1,0 +1,31 @@
+version: "3.8"
+
+services:
+  mqtt-to-dbus:
+    build: .
+    container_name: mqtt-to-dbus-bridge
+    restart: unless-stopped
+    network_mode: host  # Required for D-Bus access on Venus OS
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+      - /var/run/dbus:/var/run/dbus  # D-Bus socket
+    environment:
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - mosquitto
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: mqtt-broker
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_logs:/mosquitto/log
+    command: ["mosquitto", "-c", "/mosquitto-no-auth.conf"]
+
+volumes:
+  mosquitto_data:
+  mosquitto_logs:
