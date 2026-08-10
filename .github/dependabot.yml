@@ -1,0 +1,11 @@
+version: 2
+updates:
+  - package-ecosystem: docker
+    directory: /patterns/mqtt-to-dbus
+    schedule:
+      interval: daily
+
+  - package-ecosystem: pip
+    directory: /patterns/mqtt-to-dbus
+    schedule:
+      interval: daily
