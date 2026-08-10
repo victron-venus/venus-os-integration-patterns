@@ -1,5 +1,11 @@
 # Venus OS Integration Patterns
 
+![License](https://img.shields.io/github/license/victron-venus/venus-os-integration-patterns)
+![Python](https://img.shields.io/badge/python-3.10+-blue)
+![Tests](https://img.shields.io/github/actions/workflow/status/victron-venus/venus-os-integration-patterns/ci.yml?branch=main)
+![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)
+![Last Commit](https://img.shields.io/github/last-commit/victron-venus/venus-os-integration-patterns)
+
 Reference implementations for common Victron Venus OS integrations. Each pattern is a complete, working example you can adapt for your own setup.
 
 ## Quick Start
