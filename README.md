@@ -8,6 +8,12 @@
 
 Reference implementations for common Victron Venus OS integrations. Each pattern is a complete, working example you can adapt for your own setup.
 
+<!-- ci-release-process:start -->
+## CI and deployment
+
+See [CI and deployment workflow](docs/release-workflow.md) for required checks and local commands. This repository uses validation-only policy; application release channels do not apply.
+<!-- ci-release-process:end -->
+
 ## Quick Start
 
 ```bash
@@ -38,26 +44,26 @@ graph TD
     %% External systems
     HA[Home Assistant] -->|MQTT| MQTT[(MQTT Broker)]
     Extern[External Systems] -->|MQTT| MQTT
-    
+
     %% Integration patterns
     MQTT -->|mqtt-to-dbus| M2D[MQTT → D-Bus Bridge]
     M2D --> DBUS[(D-Bus System Bus)]
-    
+
     DBUS -->|dbus-to-mqtt| D2M[D-Bus → MQTT Bridge]
     D2M --> MQTT
-    
+
     DBUS -->|http-api-wrapper| API[FastAPI REST Wrapper]
     API --> Client[REST Clients]
-    
+
     Cron[Cron Scheduler] -->|scheduled-control| SC[Scheduled Control]
     SC --> DBUS
-    
+
     HA -.->|ha-automation| DBUS
-    
+
     %% Venus OS Core
     DBUS --> Venus[Venus OS Core<br/>MultiPlus, MPPT, BMS, etc.]
     Venus --> DBUS
-    
+
     style MQTT fill:#f9f,stroke:#333
     style DBUS fill:#bbf,stroke:#333
     style Venus fill:#bfb,stroke:#333
