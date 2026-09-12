@@ -1,5 +1,21 @@
 # Venus OS Integration Patterns
 
+## Native GX versus companion-host examples
+
+These patterns are examples, not certified device installers. Venus OS on Cerbo
+GX or Raspberry Pi uses daemontools (`svc`, `svstat`), not systemd. Keep native
+runtime/configuration under `/data`, recreate `/service` links from `/data/rc.local`,
+and bound logs with `multilog` under `/var/log`. Prepare offline dependencies
+matching the firmware's Python ABI/CPU; retain firmware-provided D-Bus/GLib
+bindings with a virtualenv using `--system-site-packages`.
+
+Docker/Compose examples target a separate Linux host with suitable D-Bus access.
+They do not imply Docker support on a stock Venus OS image. A host reaching only
+the Cerbo over TCP should use the built-in MQTT gateway; a mounted D-Bus socket
+is local to the container host. Measure signal rates, memory and disconnected
+broker behavior before deploying a new bridge to a GX.
+
+
 ![License](https://img.shields.io/github/license/victron-venus/venus-os-integration-patterns)
 ![Python](https://img.shields.io/badge/python-3.10+-blue)
 ![Tests](https://img.shields.io/github/actions/workflow/status/victron-venus/venus-os-integration-patterns/ci.yml?branch=main)
@@ -38,26 +54,26 @@ graph TD
     %% External systems
     HA[Home Assistant] -->|MQTT| MQTT[(MQTT Broker)]
     Extern[External Systems] -->|MQTT| MQTT
-    
+
     %% Integration patterns
     MQTT -->|mqtt-to-dbus| M2D[MQTT → D-Bus Bridge]
     M2D --> DBUS[(D-Bus System Bus)]
-    
+
     DBUS -->|dbus-to-mqtt| D2M[D-Bus → MQTT Bridge]
     D2M --> MQTT
-    
+
     DBUS -->|http-api-wrapper| API[FastAPI REST Wrapper]
     API --> Client[REST Clients]
-    
+
     Cron[Cron Scheduler] -->|scheduled-control| SC[Scheduled Control]
     SC --> DBUS
-    
+
     HA -.->|ha-automation| DBUS
-    
+
     %% Venus OS Core
     DBUS --> Venus[Venus OS Core<br/>MultiPlus, MPPT, BMS, etc.]
     Venus --> DBUS
-    
+
     style MQTT fill:#f9f,stroke:#333
     style DBUS fill:#bbf,stroke:#333
     style Venus fill:#bfb,stroke:#333
