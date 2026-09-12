@@ -24,6 +24,12 @@ broker behavior before deploying a new bridge to a GX.
 
 Reference implementations for common Victron Venus OS integrations. Each pattern is a complete, working example you can adapt for your own setup.
 
+<!-- ci-release-process:start -->
+## CI and deployment
+
+See [CI and deployment workflow](docs/release-workflow.md) for required checks and local commands. This repository uses validation-only policy; application release channels do not apply.
+<!-- ci-release-process:end -->
+
 ## Quick Start
 
 ```bash

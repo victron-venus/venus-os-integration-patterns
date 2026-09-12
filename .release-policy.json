@@ -1,0 +1,18 @@
+{
+  "repository": "victron-venus/venus-os-integration-patterns",
+  "mode": "validation-only",
+  "default_branch": "main",
+  "validation_workflows": [
+    "validate.yml",
+    "codeql.yml"
+  ],
+  "local_checks": [
+    "bash scripts/ci.sh"
+  ],
+  "notes": [
+    "Validation-only policy: no synthetic beta/RC artifacts or tag-triggered stable releases.",
+    "Syntax baseline only. MQTT-to-D-Bus example tests require Linux dbus/GLib bindings; live bridge and Venus OS hardware are not validated.",
+    "Dependency review remains a PR-only comparison; callable full-source validation workflows run for nightly and candidate checks."
+  ],
+  "visibility": "public"
+}
