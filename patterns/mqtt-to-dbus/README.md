@@ -47,7 +47,7 @@ mappings:
     dbus_type: "double"
     unit: "°C"
     value_template: "{{ value_json.temperature }}"
-  
+
   - mqtt_topic: "homeassistant/sensor/living_room_humidity/state"
     dbus_path: "/Humidity"
     dbus_type: "double"
@@ -68,11 +68,15 @@ mappings:
 
 ## Running
 
-### With Docker (Recommended)
+### With Docker (Linux companion host)
 
 ```bash
 docker-compose up -d
 ```
+
+On a stock Venus OS GX, use native daemontools supervision with persistent
+`/data` files; this example does not ship a validated SetupHelper installer.
+The mounted D-Bus socket belongs to the Docker host, not a remote Cerbo.
 
 ### Direct Python
 
