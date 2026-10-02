@@ -7,6 +7,7 @@ Subscribes to MQTT topics and publishes values as D-Bus service paths.
 
 import argparse
 import logging
+import math
 import signal
 import sys
 from pathlib import Path
@@ -69,8 +70,10 @@ class DBusService(dbus.service.Object):
         self.PropertiesChanged(self.service_name, {path: self._to_dbus_variant(value, dbus_type)}, [])
 
     def update_path(self, path: str, value: Any):
-        """Update an existing D-Bus path value."""
-        if path in self.values and self.values[path] != value:
+        """Update a registered D-Bus path value (creates value on first valid write)."""
+        if path not in self.paths:
+            return
+        if path not in self.values or self.values[path] != value:
             self.values[path] = value
             dbus_type = self.paths.get(path, "double")
             self.PropertiesChanged(self.service_name, {path: self._to_dbus_variant(value, dbus_type)}, [])
@@ -151,6 +154,13 @@ class MQTTToDBusBridge:
         for mapping in self.mappings:
             if mapping.get("value_template") and Template:
                 self._templates[mapping["mqtt_topic"]] = Template(mapping["value_template"])
+            dbus_path = mapping["dbus_path"]
+            dbus_type = mapping.get("dbus_type", "double")
+            if "default" in mapping:
+                self.service.set_path(dbus_path, mapping["default"], dbus_type)
+            else:
+                # Typed registration without a value: first valid MQTT reading creates it.
+                self.service.paths[dbus_path] = dbus_type
 
         self.running = False
 
@@ -226,8 +236,11 @@ class MQTTToDBusBridge:
             elif dbus_type == "string":
                 return str(value)
             else:  # double
-                return float(value)
-        except (ValueError, TypeError):
+                number = float(value)
+                if not math.isfinite(number):
+                    raise ValueError("non-finite double")
+                return number
+        except (ValueError, TypeError, OverflowError):
             logger.warning(f"Could not convert {value} to {dbus_type}, using default")
             return None
 
