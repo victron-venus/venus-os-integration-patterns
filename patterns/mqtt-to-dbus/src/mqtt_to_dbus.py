@@ -156,11 +156,12 @@ class MQTTToDBusBridge:
                 self._templates[mapping["mqtt_topic"]] = Template(mapping["value_template"])
             dbus_path = mapping["dbus_path"]
             dbus_type = mapping.get("dbus_type", "double")
-            if "default" in mapping:
-                self.service.set_path(dbus_path, mapping["default"], dbus_type)
-            else:
-                # Typed registration without a value: first valid MQTT reading creates it.
-                self.service.paths[dbus_path] = dbus_type
+            # Invalid or absent defaults leave a typed path ready for its first valid reading.
+            self.service.paths[dbus_path] = dbus_type
+            if mapping.get("default") is not None:
+                default = self._convert_value(mapping["default"], dbus_type)
+                if default is not None:
+                    self.service.set_path(dbus_path, default, dbus_type)
 
         self.running = False
 
@@ -209,7 +210,10 @@ class MQTTToDBusBridge:
                 return self._convert_value(rendered, mapping.get("dbus_type", "double"))
             except Exception as e:
                 logger.error(f"Template error for {mapping['mqtt_topic']}: {e}")
-                return mapping.get("default")
+                default = mapping.get("default")
+                if default is None:
+                    return None
+                return self._convert_value(default, mapping.get("dbus_type", "double"))
 
         # Direct key extraction
         if isinstance(data, dict):
@@ -223,12 +227,17 @@ class MQTTToDBusBridge:
     def _convert_value(self, value: Any, dbus_type: str):
         """Convert value to appropriate type."""
         try:
-            if dbus_type == "int32":
-                return int(value)
-            elif dbus_type == "uint32":
-                return int(value)
-            elif dbus_type == "uint16":
-                return int(value)
+            integer_bounds = {
+                "int32": (-(2**31), 2**31 - 1),
+                "uint32": (0, 2**32 - 1),
+                "uint16": (0, 2**16 - 1),
+            }
+            if dbus_type in integer_bounds:
+                number = int(value)
+                lower, upper = integer_bounds[dbus_type]
+                if not lower <= number <= upper:
+                    raise ValueError(f"{dbus_type} out of range")
+                return number
             elif dbus_type == "boolean":
                 if isinstance(value, str):
                     return value.lower() in ("true", "1", "yes", "on")
@@ -241,7 +250,7 @@ class MQTTToDBusBridge:
                     raise ValueError("non-finite double")
                 return number
         except (ValueError, TypeError, OverflowError):
-            logger.warning(f"Could not convert {value} to {dbus_type}, using default")
+            logger.warning(f"Could not convert {value} to {dbus_type}, ignoring value")
             return None
 
     def run(self):

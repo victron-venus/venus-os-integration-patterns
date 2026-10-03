@@ -303,5 +303,118 @@ def test_first_valid_message_creates_and_updates_registered_paths(
     assert bridge.service.values["/Ac/L1/Voltage"] == 230.0
 
 
+@pytest.mark.parametrize(
+    ("dbus_type", "default", "expected"),
+    [
+        ("double", float("nan"), None),
+        ("double", float("inf"), None),
+        ("int32", 2147483648, None),
+        ("uint32", -1, None),
+        ("uint16", 65536, None),
+        ("double", "25.5", 25.5),
+        ("int32", "7", 7),
+    ],
+)
+@patch("src.mqtt_to_dbus.dbus.SystemBus")
+@patch("src.mqtt_to_dbus.mqtt.Client")
+def test_mapping_defaults_use_message_conversion(
+    mock_mqtt_client, mock_system_bus, sample_config, dbus_type, default, expected
+):
+    """Defaults and template-error fallback obey the same typed value contract."""
+    from pathlib import Path
+    from types import SimpleNamespace
+
+    import yaml
+
+    config_path = Path(sample_config)
+    config = yaml.safe_load(config_path.read_text())
+    config["mappings"][0].update(dbus_type=dbus_type, default=default)
+    config_path.write_text(yaml.safe_dump(config))
+    bridge = MQTTToDBusBridge(sample_config)
+    assert bridge.service.paths["/Temperature"] == dbus_type
+    if expected is None:
+        assert "/Temperature" not in bridge.service.values
+    else:
+        assert bridge.service.values["/Temperature"] == expected
+        assert type(bridge.service.values["/Temperature"]) is type(expected)
+
+    class BrokenTemplate:
+        def render(self, **kwargs):
+            raise ValueError("Synthetic template failure")
+
+    bridge._templates = {"sensor/temperature": BrokenTemplate()}
+    message = SimpleNamespace(topic="sensor/temperature", payload=b"{}")
+    bridge._on_mqtt_message(None, None, message)
+    if expected is None:
+        assert "/Temperature" not in bridge.service.GetAll("")
+    else:
+        assert bridge.service.Get("", "/Temperature") == expected
+
+    bridge._templates.clear()
+    message.payload = b"1"
+    bridge._on_mqtt_message(None, None, message)
+    assert bridge.service.Get("", "/Temperature") == 1
+
+
+@pytest.mark.parametrize(
+    ("dbus_type", "constructor", "lower", "upper"),
+    [
+        ("int32", "Int32", -2147483648, 2147483647),
+        ("uint32", "UInt32", 0, 4294967295),
+        ("uint16", "UInt16", 0, 65535),
+    ],
+)
+@patch("src.mqtt_to_dbus.dbus.SystemBus")
+@patch("src.mqtt_to_dbus.mqtt.Client")
+def test_integer_message_bounds_preserve_readable_service_state(
+    mock_mqtt_client,
+    mock_system_bus,
+    sample_config,
+    monkeypatch,
+    dbus_type,
+    constructor,
+    lower,
+    upper,
+):
+    """Concrete range-checking host double models documented D-Bus integer bounds."""
+    from pathlib import Path
+    from types import SimpleNamespace
+
+    import yaml
+
+    from src import mqtt_to_dbus
+
+    class BoundedInteger(int):
+        def __new__(cls, value):
+            number = int(value)
+            if not lower <= number <= upper:
+                raise OverflowError("D-Bus integer out of range")
+            return super().__new__(cls, number)
+
+    monkeypatch.setattr(mqtt_to_dbus.dbus, constructor, BoundedInteger)
+    config_path = Path(sample_config)
+    config = yaml.safe_load(config_path.read_text())
+    config["mappings"][2]["dbus_type"] = dbus_type
+    config_path.write_text(yaml.safe_dump(config))
+    bridge = MQTTToDBusBridge(sample_config)
+    signals = []
+    monkeypatch.setattr(
+        bridge.service,
+        "PropertiesChanged",
+        lambda interface, changed, invalidated: signals.append(changed),
+    )
+    message = SimpleNamespace(topic="sensor/power", payload=b"")
+    for value in [lower, upper]:
+        message.payload = str(value).encode()
+        bridge._on_mqtt_message(None, None, message)
+        assert bridge.service.Get("", "/Power") == value
+    for value in [lower - 1, upper + 1]:
+        message.payload = str(value).encode()
+        bridge._on_mqtt_message(None, None, message)
+        assert bridge.service.values["/Power"] == upper
+        assert bridge.service.GetAll("")["/Power"] == upper
+    assert signals == [{"/Power": lower}, {"/Power": upper}]
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
