@@ -7,6 +7,7 @@ Subscribes to MQTT topics and publishes values as D-Bus service paths.
 
 import argparse
 import logging
+import math
 import signal
 import sys
 from pathlib import Path
@@ -69,8 +70,10 @@ class DBusService(dbus.service.Object):
         self.PropertiesChanged(self.service_name, {path: self._to_dbus_variant(value, dbus_type)}, [])
 
     def update_path(self, path: str, value: Any):
-        """Update an existing D-Bus path value."""
-        if path in self.values and self.values[path] != value:
+        """Update a registered D-Bus path value (creates value on first valid write)."""
+        if path not in self.paths:
+            return
+        if path not in self.values or self.values[path] != value:
             self.values[path] = value
             dbus_type = self.paths.get(path, "double")
             self.PropertiesChanged(self.service_name, {path: self._to_dbus_variant(value, dbus_type)}, [])
@@ -122,7 +125,8 @@ class MQTTToDBusBridge:
 
         self.mqtt_config = self.config["mqtt"]
         self.dbus_config = self.config["dbus"]
-        self.mappings = self.config.get("mappings", [])
+        configured_mappings = self.config.get("mappings", [])
+        self.mappings = []
 
         self.bus = dbus.SystemBus()
         self.service = DBusService(
@@ -148,9 +152,22 @@ class MQTTToDBusBridge:
         self.mqtt_client.on_message = self._on_mqtt_message
 
         self._templates = {}
-        for mapping in self.mappings:
+        for mapping in configured_mappings:
+            dbus_path = mapping["dbus_path"]
+            dbus_type = mapping.get("dbus_type", "double")
+            existing_type = self.service.paths.get(dbus_path)
+            if existing_type is not None and existing_type != dbus_type:
+                logger.error(f"Ignoring mapping for {dbus_path}: {dbus_type} conflicts with {existing_type}")
+                continue
+            self.mappings.append(mapping)
             if mapping.get("value_template") and Template:
                 self._templates[mapping["mqtt_topic"]] = Template(mapping["value_template"])
+            # Invalid or absent defaults leave a typed path ready for its first valid reading.
+            self.service.paths[dbus_path] = dbus_type
+            if mapping.get("default") is not None:
+                default = self._convert_value(mapping["default"], dbus_type)
+                if default is not None:
+                    self.service.set_path(dbus_path, default, dbus_type)
 
         self.running = False
 
@@ -199,7 +216,10 @@ class MQTTToDBusBridge:
                 return self._convert_value(rendered, mapping.get("dbus_type", "double"))
             except Exception as e:
                 logger.error(f"Template error for {mapping['mqtt_topic']}: {e}")
-                return mapping.get("default")
+                default = mapping.get("default")
+                if default is None:
+                    return None
+                return self._convert_value(default, mapping.get("dbus_type", "double"))
 
         # Direct key extraction
         if isinstance(data, dict):
@@ -213,12 +233,17 @@ class MQTTToDBusBridge:
     def _convert_value(self, value: Any, dbus_type: str):
         """Convert value to appropriate type."""
         try:
-            if dbus_type == "int32":
-                return int(value)
-            elif dbus_type == "uint32":
-                return int(value)
-            elif dbus_type == "uint16":
-                return int(value)
+            integer_bounds = {
+                "int32": (-(2**31), 2**31 - 1),
+                "uint32": (0, 2**32 - 1),
+                "uint16": (0, 2**16 - 1),
+            }
+            if dbus_type in integer_bounds:
+                number = int(value)
+                lower, upper = integer_bounds[dbus_type]
+                if not lower <= number <= upper:
+                    raise ValueError(f"{dbus_type} out of range")
+                return number
             elif dbus_type == "boolean":
                 if isinstance(value, str):
                     return value.lower() in ("true", "1", "yes", "on")
@@ -226,9 +251,12 @@ class MQTTToDBusBridge:
             elif dbus_type == "string":
                 return str(value)
             else:  # double
-                return float(value)
-        except (ValueError, TypeError):
-            logger.warning(f"Could not convert {value} to {dbus_type}, using default")
+                number = float(value)
+                if not math.isfinite(number):
+                    raise ValueError("non-finite double")
+                return number
+        except (ValueError, TypeError, OverflowError):
+            logger.warning(f"Could not convert {value} to {dbus_type}, ignoring value")
             return None
 
     def run(self):
