@@ -125,7 +125,8 @@ class MQTTToDBusBridge:
 
         self.mqtt_config = self.config["mqtt"]
         self.dbus_config = self.config["dbus"]
-        self.mappings = self.config.get("mappings", [])
+        configured_mappings = self.config.get("mappings", [])
+        self.mappings = []
 
         self.bus = dbus.SystemBus()
         self.service = DBusService(
@@ -151,11 +152,16 @@ class MQTTToDBusBridge:
         self.mqtt_client.on_message = self._on_mqtt_message
 
         self._templates = {}
-        for mapping in self.mappings:
-            if mapping.get("value_template") and Template:
-                self._templates[mapping["mqtt_topic"]] = Template(mapping["value_template"])
+        for mapping in configured_mappings:
             dbus_path = mapping["dbus_path"]
             dbus_type = mapping.get("dbus_type", "double")
+            existing_type = self.service.paths.get(dbus_path)
+            if existing_type is not None and existing_type != dbus_type:
+                logger.error(f"Ignoring mapping for {dbus_path}: {dbus_type} conflicts with {existing_type}")
+                continue
+            self.mappings.append(mapping)
+            if mapping.get("value_template") and Template:
+                self._templates[mapping["mqtt_topic"]] = Template(mapping["value_template"])
             # Invalid or absent defaults leave a typed path ready for its first valid reading.
             self.service.paths[dbus_path] = dbus_type
             if mapping.get("default") is not None:

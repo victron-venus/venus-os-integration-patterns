@@ -416,5 +416,93 @@ def test_integer_message_bounds_preserve_readable_service_state(
     assert signals == [{"/Power": lower}, {"/Power": upper}]
 
 
+@pytest.mark.parametrize("standard_path", [True, False])
+@pytest.mark.parametrize("conflicting_default", [None, 42.0])
+@patch("src.mqtt_to_dbus.dbus.SystemBus")
+@patch("src.mqtt_to_dbus.mqtt.Client")
+def test_conflicting_mapping_types_preserve_existing_paths(
+    mock_mqtt_client,
+    mock_system_bus,
+    sample_config,
+    monkeypatch,
+    standard_path,
+    conflicting_default,
+):
+    """Rejected mappings cannot alter types, defaults, subscriptions or later messages."""
+    from pathlib import Path
+    from types import SimpleNamespace
+
+    import yaml
+
+    config_path = Path(sample_config)
+    config = yaml.safe_load(config_path.read_text())
+    target = "/ProductName" if standard_path else "/Reading"
+    initial = "Test Bridge" if standard_path else "seed"
+    mappings = (
+        []
+        if standard_path
+        else [
+            {
+                "mqtt_topic": "sensor/original",
+                "dbus_path": target,
+                "dbus_type": "string",
+                "default": initial,
+            }
+        ]
+    )
+    mappings.extend(
+        [
+            {"mqtt_topic": "sensor/alias", "dbus_path": target, "dbus_type": "string"},
+            {
+                "mqtt_topic": "sensor/conflict",
+                "dbus_path": target,
+                "dbus_type": "double",
+                "default": conflicting_default,
+            },
+            {
+                "mqtt_topic": "sensor/healthy",
+                "dbus_path": "/Healthy",
+                "dbus_type": "double",
+            },
+        ]
+    )
+    config["mappings"] = mappings
+    config_path.write_text(yaml.safe_dump(config))
+    bridge = MQTTToDBusBridge(sample_config)
+    assert bridge.service.GetAll("")[target] == initial
+    assert bridge.service.paths[target] == "string"
+    assert bridge.service.Get("", target) == initial
+
+    client = mock_mqtt_client.return_value
+    bridge._on_mqtt_connect(client, None, None, 0, None)
+    subscribed = {call.args[0] for call in client.subscribe.call_args_list}
+    assert subscribed == {m["mqtt_topic"] for m in mappings} - {"sensor/conflict"}
+    signals = []
+    monkeypatch.setattr(
+        bridge.service,
+        "PropertiesChanged",
+        lambda interface, changed, invalidated: signals.append(changed),
+    )
+    bridge._on_mqtt_message(
+        None,
+        None,
+        SimpleNamespace(topic="sensor/conflict", payload=b'{"value": 99}'),
+    )
+    assert bridge.service.GetAll("")[target] == initial
+    assert signals == []
+    bridge._on_mqtt_message(
+        None,
+        None,
+        SimpleNamespace(topic="sensor/alias", payload=b'"updated"'),
+    )
+    bridge._on_mqtt_message(
+        None,
+        None,
+        SimpleNamespace(topic="sensor/healthy", payload=b"25.5"),
+    )
+    assert bridge.service.GetAll("")[target] == "updated"
+    assert bridge.service.Get("", "/Healthy") == 25.5
+    assert signals == [{target: "updated"}, {"/Healthy": 25.5}]
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
