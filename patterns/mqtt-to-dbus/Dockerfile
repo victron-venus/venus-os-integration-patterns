@@ -2,19 +2,27 @@ FROM python:3.14-slim@sha256:51dafde81dbdb6ebde285137a295cf18a47ca95234fe388a343
 
 # Install system dependencies for D-Bus
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
     dbus \
     libdbus-1-dev \
     libglib2.0-dev \
+    gir1.2-glib-2.0 \
+    libgirepository-2.0-dev \
+    libcairo2-dev \
+    pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 # Install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements.txt requirements-build.txt requirements-cairo.txt ./
+RUN pip install --no-cache-dir --only-binary=:all: --require-hashes -r requirements-build.txt && \
+    pip install --no-cache-dir --only-binary=:all: --no-binary=pycairo --no-build-isolation --require-hashes -r requirements-cairo.txt && \
+    pip install --no-cache-dir --only-binary=:all: --no-binary=dbus-python,pygobject,pycairo --no-build-isolation --require-hashes -r requirements.txt
 
 # Copy application
 COPY src/ ./src/
+RUN python -c "import src.mqtt_to_dbus"
 
 # Run as non-root user
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app

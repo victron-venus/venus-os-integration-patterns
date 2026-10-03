@@ -1,0 +1,8 @@
+paho-mqtt>=2.1.0
+dbus-python>=1.5.0
+pyyaml>=6.0.3
+jinja2>=3.1.6
+
+# Native GLib bindings imported by the bridge.
+PyGObject==3.58.0
+pycairo==1.29.1
