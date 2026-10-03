@@ -28,3 +28,30 @@ jobs:
           printf '%s\n' "$RUNNER_TEMP" >> "$GITHUB_PATH"
       - name: Run local checks
         run: bash scripts/ci.sh
+  bridge-container:
+    name: Native bridge container (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            arch: amd64
+            machine: x86_64
+          - runner: ubuntu-24.04-arm
+            arch: arm64
+            machine: aarch64
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Build and smoke-test the real bridge on its native architecture
+        env:
+          EXPECTED_ARCH: ${{ matrix.arch }}
+          EXPECTED_MACHINE: ${{ matrix.machine }}
+        run: |
+          test "$(uname -m)" = "$EXPECTED_MACHINE"
+          docker build --pull --tag mqtt-to-dbus:ci patterns/mqtt-to-dbus
+          test "$(docker image inspect mqtt-to-dbus:ci --format '{{.Architecture}}')" = "$EXPECTED_ARCH"
+          docker run --rm mqtt-to-dbus:ci --help
