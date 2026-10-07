@@ -9,3 +9,8 @@ updates:
     directory: /patterns/mqtt-to-dbus
     schedule:
       interval: daily
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
