@@ -6,6 +6,7 @@
   existing fallback values and recovery on the next valid message.
 - Run offline bridge unit tests in the shared local/CI entry point using
   hash-locked Python dependencies, alongside the native container smoke checks.
+- Analyze GitHub Actions workflows with CodeQL alongside Python source.
 - Explain the D-Bus signal hook and simplify the example container build steps
   without changing its pinned dependencies or non-root runtime user.
 
