@@ -7,7 +7,8 @@ the gate. Workflow and lockfile changes are included in validation.
 
 ## Local checks
 
-Use Python 3.11+ for the CLI and the project toolchains documented in `scripts/ci.sh`.
+Use Python 3.12 for the local/CI checks and the toolchains documented in
+[`CONTRIBUTING.md`](../CONTRIBUTING.md).
 The scripts fail on missing dependencies and do not publish anything during checks.
 
 ```bash
@@ -30,7 +31,7 @@ copies; a green syntax/validate job is not a reviewed plan or a deployment.
 ## Project limits and rollout requirements
 
 - Validation-only policy: no synthetic beta/RC artifacts or tag-triggered stable releases.
-- Syntax baseline only. MQTT-to-D-Bus example tests require Linux dbus/GLib bindings; live bridge and Venus OS hardware are not validated.
+- Syntax checks and offline MQTT-to-D-Bus unit tests use isolated host-binding stubs. Native amd64/arm64 container builds check real dbus/GLib imports; live bridge and Venus OS hardware are not validated.
 - Dependency review remains a PR-only comparison; callable full-source validation workflows run for nightly and candidate checks.
 
 For public repositories, merge and verify the workflows before enabling the

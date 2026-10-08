@@ -130,13 +130,12 @@ To add new sensor types:
 
 ## Testing
 
-```bash
-# Run unit tests
-pytest tests/
-
-# Test with mock MQTT broker
-docker-compose -f docker-compose.test.yml up --abort-on-container-exit
-```
+Follow the repository [local validation instructions](../../CONTRIBUTING.md#local-validation)
+to install the hash-locked test dependencies and run `bash scripts/ci.sh` from the
+repository root. The unit suite uses real MQTT/configuration libraries and
+explicit stubs for missing D-Bus/GLib bindings; it does not contact a live broker
+or bus. CI also builds the real container on Linux amd64 and arm64 and runs
+`--help` to verify native imports. These checks do not certify hardware behavior.
 
 ## Troubleshooting
 

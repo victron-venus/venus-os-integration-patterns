@@ -18,7 +18,7 @@ broker behavior before deploying a new bridge to a GX.
 
 ![License](https://img.shields.io/github/license/victron-venus/venus-os-integration-patterns)
 ![Python](https://img.shields.io/badge/python-3.10+-blue)
-![Tests](https://img.shields.io/github/actions/workflow/status/victron-venus/venus-os-integration-patterns/ci.yml?branch=main)
+![Tests](https://img.shields.io/github/actions/workflow/status/victron-venus/venus-os-integration-patterns/quality-gate.yml?branch=main)
 ![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)
 ![Last Commit](https://img.shields.io/github/last-commit/victron-venus/venus-os-integration-patterns)
 

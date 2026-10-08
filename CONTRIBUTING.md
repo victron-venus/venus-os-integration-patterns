@@ -21,6 +21,20 @@ Contributions must be compatible with [LICENSE](LICENSE). Preserve third-party c
 
 Run `bash scripts/ci.sh` from the repository root. The script is the authoritative local entry point for the checks and tool versions; inspect it and the checked-in dependency manifests before installing prerequisites. Use an isolated development environment.
 
+For the same Python 3.12 environment as CI:
+
+```bash
+python3.12 -m venv .venv
+. .venv/bin/activate
+python -m pip install --require-hashes --only-binary=:all: -r .github/requirements-workflow-contracts.txt -r .github/requirements-bridge-tests.txt
+bash scripts/ci.sh
+```
+
+The syntax checker also requires `node` and actionlint 1.7.12. Bridge unit tests
+use explicit stubs for missing D-Bus/GLib host bindings. CI separately builds and
+smoke-tests the real bridge container on Linux amd64 and arm64; no live bus or
+MQTT broker is contacted by the unit suite.
+
 Automated tests use mocks or controlled fixtures where available. A passing unit test does not establish hardware safety. Describe any physical-device test separately, including firmware, configuration and expected rollback. Never run installation, deployment, Terraform apply or actuator commands merely to validate a documentation change.
 
 ## Source and interfaces
