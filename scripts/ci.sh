@@ -2,3 +2,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 python3 scripts/validate-source.py
+(
+  cd patterns/mqtt-to-dbus
+  PYTHONPATH=. python3 -m pytest tests/ -q
+)

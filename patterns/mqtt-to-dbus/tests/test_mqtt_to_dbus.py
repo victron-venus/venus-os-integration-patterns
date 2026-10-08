@@ -318,7 +318,7 @@ def test_first_valid_message_creates_and_updates_registered_paths(
 @patch("src.mqtt_to_dbus.dbus.SystemBus")
 @patch("src.mqtt_to_dbus.mqtt.Client")
 def test_mapping_defaults_use_message_conversion(
-    mock_mqtt_client, mock_system_bus, sample_config, dbus_type, default, expected
+    mock_mqtt_client, mock_system_bus, sample_config, dbus_type, default, expected, caplog
 ):
     """Defaults and template-error fallback obey the same typed value contract."""
     from pathlib import Path
@@ -345,6 +345,10 @@ def test_mapping_defaults_use_message_conversion(
     bridge._templates = {"sensor/temperature": BrokenTemplate()}
     message = SimpleNamespace(topic="sensor/temperature", payload=b"{}")
     bridge._on_mqtt_message(None, None, message)
+    record = next(record for record in caplog.records if "Template error" in record.message)
+    assert record.exc_info is not None
+    assert isinstance(record.exc_info[1], ValueError)
+    assert record.exc_info[2] is not None
     if expected is None:
         assert "/Temperature" not in bridge.service.GetAll("")
     else:
@@ -354,6 +358,27 @@ def test_mapping_defaults_use_message_conversion(
     message.payload = b"1"
     bridge._on_mqtt_message(None, None, message)
     assert bridge.service.Get("", "/Temperature") == 1
+
+
+@patch("src.mqtt_to_dbus.dbus.SystemBus")
+@patch("src.mqtt_to_dbus.mqtt.Client")
+def test_invalid_message_keeps_traceback_and_next_message_updates(
+    mock_mqtt_client, mock_system_bus, sample_config, caplog
+):
+    from types import SimpleNamespace
+
+    bridge = MQTTToDBusBridge(sample_config)
+    message = SimpleNamespace(topic="sensor/temperature", payload=b"\xff")
+    bridge._on_mqtt_message(None, None, message)
+    record = next(record for record in caplog.records if "Error processing message" in record.message)
+    assert record.exc_info is not None
+    assert isinstance(record.exc_info[1], UnicodeDecodeError)
+    assert record.exc_info[2] is not None
+    assert "/Temperature" not in bridge.service.values
+
+    message.payload = b'{"temperature": 25.5}'
+    bridge._on_mqtt_message(None, None, message)
+    assert bridge.service.Get("", "/Temperature") == 25.5
 
 
 @pytest.mark.parametrize(

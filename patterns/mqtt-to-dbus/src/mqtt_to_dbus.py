@@ -113,6 +113,7 @@ class DBusService(dbus.service.Object):
 
     @dbus.service.signal("org.freedesktop.DBus.Properties", signature="sa{sv}as")
     def PropertiesChanged(self, interface: str, changed: dict, invalidated: list):
+        # dbus-python emits the signal from these arguments after this hook returns.
         pass
 
 
@@ -198,7 +199,7 @@ class MQTTToDBusBridge:
                         self.service.update_path(mapping["dbus_path"], value)
                     break
         except Exception as e:
-            logger.error(f"Error processing message: {e}")
+            logger.exception(f"Error processing message: {e}")
 
     def _extract_value(self, payload: str, mapping: dict):
         """Extract value from MQTT payload using template or direct JSON."""
@@ -215,7 +216,7 @@ class MQTTToDBusBridge:
                 rendered = template.render(value_json=data)
                 return self._convert_value(rendered, mapping.get("dbus_type", "double"))
             except Exception as e:
-                logger.error(f"Template error for {mapping['mqtt_topic']}: {e}")
+                logger.exception(f"Template error for {mapping['mqtt_topic']}: {e}")
                 default = mapping.get("default")
                 if default is None:
                     return None
