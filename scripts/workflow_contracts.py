@@ -58,6 +58,46 @@ def validate_codeql(workflows):
         )
 
 
+def yaml_member(node, name):
+    """Locate one parsed YAML value without constructing Python objects."""
+    if isinstance(node, yaml.MappingNode):
+        return next((value for key, value in node.value if key.value == name), None)
+    return None
+
+
+def validate_codeql_update_metadata(sources):
+    """Keep every CodeQL SHA discoverable by Renovate, including SARIF uploads."""
+    versions = set()
+    for filename, source in sources.items():
+        root = yaml.compose(source, Loader=yaml.BaseLoader)
+        jobs = yaml_member(root, "jobs")
+        if not isinstance(jobs, yaml.MappingNode):
+            continue
+        lines = source.splitlines()
+        for _, job in jobs.value:
+            steps = yaml_member(job, "steps")
+            if not isinstance(steps, yaml.SequenceNode):
+                continue
+            for step in steps.value:
+                reference = yaml_member(step, "uses")
+                if not isinstance(reference, yaml.ScalarNode) or not re.fullmatch(
+                    r"github/codeql-action/(init|autobuild|analyze|upload-sarif)@"
+                    + COMMIT_SHA_PATTERN, reference.value
+                ):
+                    continue
+                mark = reference.end_mark
+                tail = lines[mark.line][mark.column:] if mark.line < len(lines) else ""
+                comment = re.match(r"[ \t]*#[ \t]*(v[0-9]+\.[0-9]+\.[0-9]+)(?:[ \t]|$)", tail)
+                if comment is None:
+                    raise ValueError(
+                        f"{filename}:{reference.start_mark.line + 1}: "
+                        "CodeQL SHA needs an inline full release comment for Renovate"
+                    )
+                versions.add(comment[1])
+    if len(versions) > 1:
+        raise ValueError("CodeQL version comments must name the same release")
+
+
 def validate_workflow_pins(filename, workflow, pins):
     """Require immutable actions and compare canonical generator pins when present."""
     for job in workflow.get("jobs", {}).values():
@@ -137,6 +177,10 @@ def validate(directory: Path, *, actions_only=False) -> None:
         for path in (directory / ".github/workflows").glob("*.y*ml")
     }
     validate_codeql(workflows)
+    validate_codeql_update_metadata({
+        path.name: path.read_text()
+        for path in (directory / ".github/workflows").glob("*.y*ml")
+    })
     validate_generator_pins(directory, workflows)
     if actions_only:
         return

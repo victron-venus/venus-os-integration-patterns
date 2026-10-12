@@ -9,14 +9,12 @@ updates:
     directory: /patterns/mqtt-to-dbus
     schedule:
       interval: daily
-
+  # Renovate owns CI updates. The ignore rule also prevents separate
+  # Dependabot security-update PRs; vulnerability alerts remain enabled.
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
-    groups:
-      # Keep CodeQL components and shared workflow pins in one reviewed update.
-      ci-workflows:
-        applies-to: version-updates
-        patterns:
-          - "*"
+    open-pull-requests-limit: 0
+    ignore:
+      - dependency-name: '*'
