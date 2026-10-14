@@ -17,7 +17,7 @@ BOUNDS = {"int32": (-(2**31), 2**31 - 1), "uint32": (0, 2**32 - 1), "uint16": (0
 def test_one_input(data):
     try:
         value = json.loads(data)
-    except (ValueError, UnicodeError, RecursionError):
+    except (ValueError, RecursionError):
         value = data.decode("utf-8", errors="replace")
     for kind in ("double", "int32", "uint32", "uint16", "boolean", "string"):
         try:
