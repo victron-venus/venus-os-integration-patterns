@@ -1,5 +1,7 @@
 # Venus OS Integration Patterns
 
+[![Fuzzing: RC only](https://img.shields.io/badge/Fuzzing-RC%20only-blue)](docs/fuzzing.md)
+
 ## Native GX versus companion-host examples
 
 These patterns are examples, not certified device installers. Venus OS on Cerbo
