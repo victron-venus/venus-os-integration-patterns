@@ -7,11 +7,15 @@ Subscribes to MQTT topics and publishes values as D-Bus service paths.
 
 import argparse
 import logging
-import math
 import signal
 import sys
 from pathlib import Path
 from typing import Any
+
+if __package__:
+    from .value_conversion import convert_value
+else:
+    from value_conversion import convert_value
 
 import paho.mqtt.client as mqtt
 import yaml
@@ -234,28 +238,7 @@ class MQTTToDBusBridge:
     def _convert_value(self, value: Any, dbus_type: str):
         """Convert value to appropriate type."""
         try:
-            integer_bounds = {
-                "int32": (-(2**31), 2**31 - 1),
-                "uint32": (0, 2**32 - 1),
-                "uint16": (0, 2**16 - 1),
-            }
-            if dbus_type in integer_bounds:
-                number = int(value)
-                lower, upper = integer_bounds[dbus_type]
-                if not lower <= number <= upper:
-                    raise ValueError(f"{dbus_type} out of range")
-                return number
-            elif dbus_type == "boolean":
-                if isinstance(value, str):
-                    return value.lower() in ("true", "1", "yes", "on")
-                return bool(value)
-            elif dbus_type == "string":
-                return str(value)
-            else:  # double
-                number = float(value)
-                if not math.isfinite(number):
-                    raise ValueError("non-finite double")
-                return number
+            return convert_value(value, dbus_type)
         except (ValueError, TypeError, OverflowError):
             logger.warning(f"Could not convert {value} to {dbus_type}, ignoring value")
             return None

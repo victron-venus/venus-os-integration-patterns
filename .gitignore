@@ -11,3 +11,7 @@ __pycache__/
 
 # OS
 .DS_Store
+
+.fuzz-venv/
+.fuzz-results/
+release-dist/

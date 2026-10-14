@@ -1,6 +1,6 @@
 {
   "repository": "victron-venus/venus-os-integration-patterns",
-  "mode": "validation-only",
+  "mode": "release",
   "default_branch": "main",
   "validation_workflows": [
     "validate.yml",
@@ -11,10 +11,38 @@
     "bash scripts/ci.sh"
   ],
   "notes": [
-    "Validation-only policy: no synthetic beta/RC artifacts or tag-triggered stable releases.",
-    "Syntax checks and offline MQTT-to-D-Bus unit tests use isolated host-binding stubs. Native amd64/arm64 container builds check real dbus/GLib imports; live bridge and Venus OS hardware are not validated.",
-    "Dependency review remains a PR-only comparison; callable full-source validation workflows run for nightly and candidate checks."
+    "The actual MQTT-to-D-Bus numeric conversion has been extracted into an importable pure helper. The running bridge calls that helper; the fuzz target exercises finite values, representable integer bounds, booleans, strings and conversion stability without importing D-Bus/GLib or opening MQTT connections.",
+    "Versioned artifacts are the reviewed source suite, not a firmware or deployment. Existing ordinary application, container, dependency and CodeQL checks remain required."
   ],
   "visibility": "public",
-  "single_entry_ci": true
+  "single_entry_ci": true,
+  "schema": 1,
+  "version_file": "SOURCE_VERSION",
+  "release_notes": "CHANGELOG.md",
+  "artifact_pattern": "release-assets*",
+  "container_assets": {},
+  "versioning": {
+    "schema": 1,
+    "promotion": "promote-bytes",
+    "toolkit_revision": "21f8041a2a11a13367f49a37e624ac51ab8c4481",
+    "files": [
+      {
+        "path": "SOURCE_VERSION",
+        "format": "text",
+        "value": "package"
+      }
+    ],
+    "artifacts": [
+      {
+        "path": "venus-os-integration-patterns-*.tar.gz",
+        "format": "tar-text",
+        "member": "venus-os-integration-patterns/SOURCE_VERSION",
+        "value": "package"
+      }
+    ]
+  },
+  "fuzzing": {
+    "toolkit_ref": "21f8041a2a11a13367f49a37e624ac51ab8c4481"
+  },
+  "toolkit_revision": "21f8041a2a11a13367f49a37e624ac51ab8c4481"
 }
