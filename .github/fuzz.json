@@ -29,7 +29,19 @@
         "-max_len=4096"
       ],
       "seconds": 60,
-      "corpus": "fuzz/corpus/conversion"
+      "corpus": "fuzz/corpus/conversion",
+      "instrumentation": [
+        {
+          "module": "value_conversion",
+          "functions": [
+            "convert_value"
+          ]
+        }
+      ]
     }
+  ],
+  "preflight-paths": [
+    "fuzz",
+    "patterns"
   ]
 }
