@@ -44,6 +44,7 @@ class SourceDistributionTests(unittest.TestCase):
             "Synthetic source snapshot",
         )
         self.policy = json.loads((self.root / ".release-policy.json").read_text())
+        self.base_version = version_plan.read_base_version(ROOT, self.policy)
 
     def command(self, *args):
         return subprocess.check_output(
@@ -52,7 +53,7 @@ class SourceDistributionTests(unittest.TestCase):
 
     def freeze(self, channel):
         plan = version_plan.create_plan(
-            "0.1.2",
+            self.base_version,
             channel,
             7,
             self.command("git", "rev-parse", "HEAD").strip(),
@@ -72,12 +73,12 @@ class SourceDistributionTests(unittest.TestCase):
     def test_beta_and_rc_archive_versions_receipts_and_component_independence(self):
         independent = ['patterns/mqtt-to-dbus/src/mqtt_to_dbus.py', 'patterns/mqtt-to-dbus/requirements.txt']
         before = {name: (self.root / name).read_bytes() for name in independent}
-        for channel, expected in (("beta", "0.1.2-beta.7"), ("rc", "0.1.2")):
+        for channel, expected in (("beta", f"{self.base_version}-beta.7"), ("rc", self.base_version)):
             with self.subTest(channel=channel):
-                (self.root / "SOURCE_VERSION").write_text("0.1.2\n")
+                (self.root / "SOURCE_VERSION").write_text(self.base_version + "\n")
                 plan = self.freeze(channel)
                 output = self.root / channel
-                archive = package_source.build(self.root, "0.1.2", channel, output)
+                archive = package_source.build(self.root, self.base_version, channel, output)
                 with tarfile.open(archive) as package:
                     self.assertEqual(
                         package.extractfile("venus-os-integration-patterns/SOURCE_VERSION")
@@ -106,14 +107,14 @@ class SourceDistributionTests(unittest.TestCase):
 
     def test_actual_extracted_offline_recovery_guards_pass(self):
         self.freeze("rc")
-        archive = package_source.build(self.root, "0.1.2", "rc", self.root / "output")
+        archive = package_source.build(self.root, self.base_version, "rc", self.root / "output")
         package_source.verify(archive, self.root)
 
     def test_shared_local_package_command_uses_source_adapter(self):
         self.freeze("rc")
         self.command(
             sys.executable, "scripts/release.py", "package",
-            "--version", "0.1.2", "--channel", "rc",
+            "--version", self.base_version, "--channel", "rc",
         )
         archives = list((self.root / "release-dist").glob("*.tar.gz"))
         self.assertEqual(len(archives), 1)
@@ -125,8 +126,8 @@ class SourceDistributionTests(unittest.TestCase):
         (self.root / "private/example.local.json").write_text(
             '{"synthetic":"do not package"}'
         )
-        first = package_source.build(self.root, "0.1.2", "beta", self.root / "first")
-        second = package_source.build(self.root, "0.1.2", "beta", self.root / "second")
+        first = package_source.build(self.root, self.base_version, "beta", self.root / "first")
+        second = package_source.build(self.root, self.base_version, "beta", self.root / "second")
         self.assertEqual(first.read_bytes(), second.read_bytes())
         with tarfile.open(first) as package:
             self.assertFalse(any("/private/" in name for name in package.getnames()))
@@ -160,7 +161,7 @@ class SourceDistributionTests(unittest.TestCase):
 
     def test_changed_archive_fails_before_extraction(self):
         self.freeze("rc")
-        archive = package_source.build(self.root, "0.1.2", "rc", self.root / "output")
+        archive = package_source.build(self.root, self.base_version, "rc", self.root / "output")
         with tarfile.open(archive, "w:gz") as package:
             entry = tarfile.TarInfo("venus-os-integration-patterns/SOURCE_VERSION")
             entry.size = 6
