@@ -151,3 +151,27 @@ or bus. CI also builds the real container on Linux amd64 and arm64 and runs
 - [D-Bus → MQTT Bridge](../dbus-to-mqtt/) — Opposite direction
 - [dbus-mqtt-battery](https://github.com/victron-venus/dbus-mqtt-battery) — Production JBD BMS implementation
 - [Victron D-Bus Docs](https://github.com/victronenergy/venus-dbus-api)
+
+## Updating dependencies
+
+`requirements.txt` is the canonical manually hash-locked runtime dependency
+list. The native-build list `requirements-build.txt` is generated from
+`requirements-build.in` with the exact uv command in its header. `requirements-cairo.txt`
+selects the same Cairo version and source hash for the preinstallation step.
+The runtime list includes the direct Paho MQTT, dbus-python, PyYAML, Jinja2,
+PyGObject and pycairo dependencies and their transitive dependencies. Build tools
+are pinned separately so native source builds do not fetch unreviewed build
+requirements implicitly.
+
+Dependabot updates the runtime list as an ordinary pip requirement file. It is
+not a pip-compile output: do not add `requirements.in` unless migrating to a
+fully tested compilation workflow. Dependabot infers pip-compile from that
+name, then tries native build metadata in an environment without the required
+Cairo/GI development packages. The documented Dockerfile provides those system
+libraries for the actual installation and smoke tests.
+
+For an update, review direct/transitive compatibility and upstream PyPI hashes,
+keep the Cairo runtime/preinstallation pins and hashes identical, and run both
+native container checks. Retain `--require-hashes` and the separate build-tool
+installation; do not bypass native builds by deleting requirements or suppressing
+updater errors. The source archive ships these canonical lists.

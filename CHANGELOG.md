@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- Remove the unused runtime pip-compile input manifest so Dependabot treats the canonical
+  hash-locked dependency files as ordinary pip requirements. Native container
+  builds and Cairo preinstallation consistency checks remain required.
+
+- Document governance, private conduct reporting, the maintained architecture and
+  assurance scope; link the official OpenSSF assessment from the README.
+- Clarify the 60-day fix policy for publicly known medium-or-higher vulnerabilities.
+
 ## [0.1.3] - 2026-10-14
 
 ### Changed

@@ -1,6 +1,6 @@
 # OpenSSF Best Practices evidence: venus-os-integration-patterns
 
-This index supports review against the [OpenSSF Passing criteria](https://www.bestpractices.dev/en/criteria/0). It is not an awarded badge, a security guarantee or a completed self-attestation. Initial source inventory: `5cdeb1e5d6b8dc28f605f5f200b94a108c067378`. Re-check the final merged commit and its CI before submitting an assessment.
+This index supports review against the [OpenSSF Passing criteria](https://www.bestpractices.dev/en/criteria/0). [The official assessment](https://www.bestpractices.dev/en/projects/15558) records the current badge level. See [architecture, assurance scope and roadmap](project-assurance.md) for the maintained source inventory and limitations. Evidence must refer to the final merged commit and its actual checks.
 
 ## Project and contribution process
 
@@ -49,6 +49,6 @@ Do not equate a green metadata or release job with successful application tests.
 - Review dependency, code-scanning and secret-scanning findings and their age. A workflow success result is not proof that all findings are resolved.
 - Review the actual cryptographic libraries, protocols, key lengths, randomness, certificate checks and password storage applicable to this project. Do not copy another project's answers.
 - Verify build reproducibility from source, test policy adherence in recent substantive changes, dynamic analysis and any manual-memory-code checks.
-- Link only this project's real awarded badge once the assessment is accepted.
+- The README links this project's live assessment badge; its status changes with the official assessment.
 
 The live assessment, when created, is the source of truth for the badge level. Unverified criteria remain open.
