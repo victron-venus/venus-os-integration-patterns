@@ -260,5 +260,5 @@ pycairo==1.29.1 \
     --hash=sha256:f635a60b7525661b562061e4b1635670b804d1efc9c7f40796c2fa14b24c3ddf
     # via pygobject
 
-pygobject==3.58.0 \
-    --hash=sha256:45068697de3ffe46840ca369705f23118b34db4f7deb63f6eff079a6734ddcca
+pygobject==3.58.1 \
+    --hash=sha256:4c80598ade17fbaa7798e01a25d0bf29ce109740786026a074c5c62bb3e79d23
