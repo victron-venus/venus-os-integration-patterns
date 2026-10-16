@@ -1,5 +1,7 @@
 # Venus OS Integration Patterns
 
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/15558/badge)](https://www.bestpractices.dev/en/projects/15558)
+
 [![Fuzzing: RC only](https://img.shields.io/badge/Fuzzing-RC%20only-blue)](docs/fuzzing.md)
 
 ## Native GX versus companion-host examples
@@ -24,7 +26,7 @@ broker behavior before deploying a new bridge to a GX.
 ![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)
 ![Last Commit](https://img.shields.io/github/last-commit/victron-venus/venus-os-integration-patterns)
 
-Reference implementations for common Victron Venus OS integrations. Each pattern is a complete, working example you can adapt for your own setup.
+A runnable MQTT-to-D-Bus example and design notes for common Victron Venus OS integrations. Review the implementation status and deployment boundaries before adapting an example.
 
 <!-- ci-release-process:start -->
 ## CI and deployment
@@ -42,49 +44,26 @@ git clone https://github.com/victron-venus/venus-os-integration-patterns.git
 cd venus-os-integration-patterns/patterns/mqtt-to-dbus
 
 # Review the README, then start with docker-compose
-docker-compose up -d
+docker compose up -d
 ```
 
 ## Patterns
 
-| Pattern | Description | Complexity | Dependencies |
-|---------|-------------|------------|--------------|
-| [mqtt-to-dbus](patterns/mqtt-to-dbus/) | Subscribe to MQTT topic, register D-Bus service, publish values | Beginner | paho-mqtt, dbus-python, systemd/docker |
-| [dbus-to-mqtt](patterns/dbus-to-mqtt/) | Monitor D-Bus path changes, publish to MQTT | Beginner | dbus-python, paho-mqtt |
-| [http-api-wrapper](patterns/http-api-wrapper/) | FastAPI wrapper around D-Bus for REST access | Intermediate | fastapi, dbus-python, uvicorn |
-| [scheduled-control](patterns/scheduled-control/) | Time-based inverter mode switching via cron | Beginner | python-cron, dbus-python |
-| [ha-automation](patterns/ha-automation/) | Home Assistant automation YAML for Venus OS entities | Beginner | Home Assistant, MQTT |
+- [mqtt-to-dbus](patterns/mqtt-to-dbus/): runnable Python bridge with configuration, unit tests and a native container build.
+- [dbus-to-mqtt](patterns/dbus-to-mqtt/): documentation example for publishing D-Bus updates to MQTT.
+- [http-api-wrapper](patterns/http-api-wrapper/): documentation example of an HTTP interface around D-Bus.
+
+Scheduled control and Home Assistant automation are possible extensions; this
+repository does not yet ship those implementations.
 
 ## Architecture Overview
 
 ```mermaid
-graph TD
-    %% External systems
-    HA[Home Assistant] -->|MQTT| MQTT[(MQTT Broker)]
-    Extern[External Systems] -->|MQTT| MQTT
-
-    %% Integration patterns
-    MQTT -->|mqtt-to-dbus| M2D[MQTT → D-Bus Bridge]
-    M2D --> DBUS[(D-Bus System Bus)]
-
-    DBUS -->|dbus-to-mqtt| D2M[D-Bus → MQTT Bridge]
-    D2M --> MQTT
-
-    DBUS -->|http-api-wrapper| API[FastAPI REST Wrapper]
-    API --> Client[REST Clients]
-
-    Cron[Cron Scheduler] -->|scheduled-control| SC[Scheduled Control]
-    SC --> DBUS
-
-    HA -.->|ha-automation| DBUS
-
-    %% Venus OS Core
-    DBUS --> Venus[Venus OS Core<br/>MultiPlus, MPPT, BMS, etc.]
-    Venus --> DBUS
-
-    style MQTT fill:#f9f,stroke:#333
-    style DBUS fill:#bbf,stroke:#333
-    style Venus fill:#bfb,stroke:#333
+flowchart LR
+    MQTT[Trusted local MQTT broker] --> Bridge[MQTT-to-D-Bus bridge]
+    Config[YAML configuration] --> Bridge
+    Bridge --> Dbus[Local D-Bus system bus]
+    Dbus --> Venus[Venus OS consumers]
 ```
 
 ## Requirements
@@ -99,7 +78,7 @@ graph TD
 1. Fork the repository
 2. Create a new pattern directory under `patterns/`
 3. Include: `README.md`, working code, `docker-compose.yml`, `tests/`
-4. Add entry to the patterns table above
+4. Document its implementation status in the patterns list above
 5. Submit a PR
 
 ## License
@@ -118,3 +97,7 @@ MIT License — see [LICENSE](LICENSE) for details.
 See [CONTRIBUTING.md](CONTRIBUTING.md) for reports, development checks and pull requests,
 [SECURITY.md](SECURITY.md) for private vulnerability reporting and deployment trust boundaries,
 and the [OpenSSF evidence index](docs/openssf-evidence.md) for assessment references and remaining verification.
+
+See [governance](GOVERNANCE.md), [community conduct](CODE_OF_CONDUCT.md) and
+[the architecture, assurance scope and roadmap](docs/project-assurance.md).
+The live OpenSSF assessment reports the achieved level and remaining criteria.
