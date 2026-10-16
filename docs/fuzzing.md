@@ -1,5 +1,9 @@
 # RC-only fuzz testing
 
+See the [illustrated RC fuzzing process and verified rollout results](https://github.com/victron-venus/venus-os-ci-toolkit/blob/main/docs/rc-fuzzing-results.md)
+for the shared release flow, evidence requirements and a dated cross-project
+snapshot. The project-specific scope and reproduction guidance below still apply.
+
 The actual MQTT-to-D-Bus numeric conversion has been extracted into an importable pure helper. The running bridge calls that helper; the fuzz target exercises finite values, representable integer bounds, booleans, strings and conversion stability without importing D-Bus/GLib or opening MQTT connections.
 
 Each target receives a 60-second mutation budget and at most 4,096 input bytes.
