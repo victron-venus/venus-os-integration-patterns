@@ -35,7 +35,8 @@ The local validation entry point is [scripts/ci.sh](../scripts/ci.sh). Its actua
 - [coderabbit-review.yml](../.github/workflows/coderabbit-review.yml)
 - [dependency-review.yml](../.github/workflows/dependency-review.yml)
 - [quality-gate.yml](../.github/workflows/quality-gate.yml)
-- [release.yml](../.github/workflows/release.yml)
+- [release-build.yml](../.github/workflows/release-build.yml)
+- [release-pipeline.yml](../.github/workflows/release-pipeline.yml)
 - [scorecards.yml](../.github/workflows/scorecards.yml)
 - [validate.yml](../.github/workflows/validate.yml)
 
@@ -51,4 +52,4 @@ Do not equate a green metadata or release job with successful application tests.
 - Verify build reproducibility from source, test policy adherence in recent substantive changes, dynamic analysis and any manual-memory-code checks.
 - The README links this project's live assessment badge; its status changes with the official assessment.
 
-The live assessment, when created, is the source of truth for the badge level. Unverified criteria remain open.
+The linked live assessment is the source of truth for the badge level. Unverified criteria remain open.
