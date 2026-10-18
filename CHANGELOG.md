@@ -4,6 +4,7 @@
 
 ### Changed
 
+- Route Dependabot metadata approval through the trusted default branch while preserving the existing author and review policy.
 - Update Pycairo to 1.29.2, PyGObject to 3.58.1 and pinned shared CI workflows.
 
 ### Upgrade
