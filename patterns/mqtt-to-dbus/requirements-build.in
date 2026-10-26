@@ -2,5 +2,5 @@ meson-python==0.22.1
 meson==1.12.1
 ninja==1.13.2
 patchelf==0.19.1.0 ; sys_platform == "linux"
-setuptools==84.2.0
+setuptools==84.2.1
 wheel==0.48.0
