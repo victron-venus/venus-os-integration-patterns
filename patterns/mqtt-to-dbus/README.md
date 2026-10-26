@@ -158,6 +158,9 @@ or bus. CI also builds the real container on Linux amd64 and arm64 and runs
 list. The native-build list `requirements-build.txt` is generated from
 `requirements-build.in` with the exact uv command in its header. `requirements-cairo.txt`
 selects the same Cairo version and source hash for the preinstallation step.
+Regenerate the build lock after changing its input. Repository validation checks
+that every declared build dependency remains in the lock with its pinned version,
+platform marker and an artifact hash, including build tools such as setuptools.
 The runtime list includes the direct Paho MQTT, dbus-python, PyYAML, Jinja2,
 PyGObject and pycairo dependencies and their transitive dependencies. Build tools
 are pinned separately so native source builds do not fetch unreviewed build
