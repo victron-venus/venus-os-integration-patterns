@@ -233,8 +233,8 @@ pyyaml==6.0.3 \
     --hash=sha256:fa160448684b4e94d80416c0fa4aac48967a969efe22931448d853ada8baf926 \
     --hash=sha256:fc09d0aa354569bc501d4e787133afc08552722d3ab34836a80547331bb5d4a0
 
-dbus-python==1.5.0 \
-    --hash=sha256:ac94ce330879108e5d37105164cc14b595bdf9326d2ce4a5acad6c1ab2bf6476
+dbus-python==1.5.1 \
+    --hash=sha256:57423cf87d09b7d084f420b55b737fe654c33339b06df77945620d97795c6ac4
 
 # GLib bindings, also exercised by both native container validation jobs.
 # PyGObject needs pycairo installed before its build backend runs.
