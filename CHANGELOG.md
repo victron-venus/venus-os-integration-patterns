@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.6] - 2026-10-27
+
+### Changed
+
+- Update the MQTT-to-D-Bus example to the reviewed, hash-pinned dbus-python 1.5.1 source distribution. Both native architecture validation jobs continue to exercise the GLib and D-Bus build dependencies.
+
 ## [0.1.5] - 2026-10-18
 
 ### Changed
