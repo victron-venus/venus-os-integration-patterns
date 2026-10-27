@@ -7,6 +7,14 @@
 - Update the MQTT-to-D-Bus example to the reviewed, hash-pinned dbus-python 1.5.1 source distribution. Both native architecture validation jobs continue to exercise the GLib and D-Bus build dependencies.
 - Update the native build lock to setuptools 84.2.1 and verify that every declared build dependency retains its version, marker, extras and SHA-256 hash in the lockfile.
 
+### Upgrade
+
+Extract the new examples separately and rebuild with the committed dependency locks and required GLib/D-Bus system libraries. Preserve local example configuration and keep the previous source package for rollback. Publishing these examples does not install or migrate a deployed service.
+
+### Security
+
+Retain source-distribution hash verification and the native architecture checks when building the examples. The dependency refresh does not authorize privileged deployment or establish physical-device acceptance; use test credentials for local validation.
+
 ## [0.1.5] - 2026-10-18
 
 ### Changed
