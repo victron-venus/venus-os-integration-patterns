@@ -39,6 +39,9 @@
         "member": "venus-os-integration-patterns/SOURCE_VERSION",
         "value": "package"
       }
+    ],
+    "required_build_receipts": [
+      "release-inputs-package.json"
     ]
   },
   "fuzzing": {
