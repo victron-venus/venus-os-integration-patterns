@@ -49,7 +49,12 @@
   },
   "toolkit_revision": "21f8041a2a11a13367f49a37e624ac51ab8c4481",
   "change_scope": {
-    "documentation_paths": [],
+    "documentation_paths": [
+      "GOVERNANCE.md",
+      "patterns/dbus-to-mqtt/README.md",
+      "patterns/http-api-wrapper/README.md",
+      "patterns/mqtt-to-dbus/README.md"
+    ],
     "required_paths": [
       "CHANGELOG.md"
     ],
