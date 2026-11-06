@@ -1,6 +1,56 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "local>victron-venus/venus-os-ci-toolkit:renovate-ci"
-  ]
+    "local>victron-venus/venus-os-ci-toolkit:renovate-fleet"
+  ],
+  "enabledManagers": [
+    "custom.jsonata",
+    "custom.regex",
+    "docker-compose",
+    "dockerfile",
+    "github-actions",
+    "pip-compile",
+    "pip_requirements"
+  ],
+  "ignorePaths": [
+    "**/vendor/**",
+    "**/node_modules/**",
+    "**/fixtures/**",
+    "**/tools/browser-compatibility/**",
+    "security/provider/**",
+    "build-support/tls-armv7/**"
+  ],
+  "packageRules": [
+    {
+      "description": "Generated locks are updated by pip-compile through their recorded source inputs; never edit the output pins independently.",
+      "matchManagers": [
+        "pip_requirements"
+      ],
+      "matchFileNames": [
+        "patterns/mqtt-to-dbus/requirements-build.txt"
+      ],
+      "enabled": false
+    }
+  ],
+  "pip_requirements": {
+    "managerFilePatterns": [
+      "/(^|/)requirements[^/]*\\.(txt|pip)$/"
+    ],
+    "ignorePaths": [
+      "**/vendor/**",
+      "**/node_modules/**",
+      "**/fixtures/**",
+      "**/tools/browser-compatibility/**",
+      "security/provider/**",
+      "build-support/tls-armv7/**",
+      ".github/requirements-bridge-tests.txt",
+      "patterns/mqtt-to-dbus/requirements-build.txt"
+    ]
+  },
+  "pip-compile": {
+    "managerFilePatterns": [
+      "/^patterns/mqtt\\-to\\-dbus/requirements\\-build\\.txt$/",
+      "/^\\.github/requirements\\-bridge\\-tests\\.txt$/"
+    ]
+  }
 }
