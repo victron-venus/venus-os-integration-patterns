@@ -30,6 +30,19 @@
         "patterns/mqtt-to-dbus/requirements-build.txt"
       ],
       "enabled": false
+    },
+    {
+      "description": "The hash-locked PyYAML dependency requires Python 3.14 wheels. Keep patch and digest updates on this qualified minor until its dependency lock supports the next Python minor.",
+      "matchManagers": [
+        "dockerfile"
+      ],
+      "matchPackageNames": [
+        "python"
+      ],
+      "matchFileNames": [
+        "patterns/mqtt-to-dbus/Dockerfile"
+      ],
+      "allowedVersions": "/^3\\.14(?:[.-]|$)/"
     }
   ],
   "pip_requirements": {
