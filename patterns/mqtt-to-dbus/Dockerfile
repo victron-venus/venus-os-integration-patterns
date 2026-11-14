@@ -1,4 +1,4 @@
-FROM python:3.14-slim@sha256:cd89c30eda26ee911a4611b18680086e0ea42e6f5f8cbe653d07fa7958c9cec8
+FROM python:3.14-slim@sha256:9aaa474097d094040649f2162a627c0049b408f52138d980916788d80f04802f
 # The hash-locked PyYAML dependency requires Python 3.14 wheels.
 
 # Install system dependencies for D-Bus
