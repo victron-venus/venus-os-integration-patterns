@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.1.7] - Unreleased
+
+### Changed
+
+- keep local instruction files out of git.
+- add a navigation index for docs/.
+- add line-ending and language attributes.
+- isolate every auto-merge base edit (#97).
+- preserve merge identity and withdrawn auto-merge requests (#96).
+- validate the toolkit before scope regeneration (#91).
+- cover ordinary documentation without weakening validation (#90).
+- scope documentation validation and preserve release qualification (#89).
+- migrate dependency updates to Renovate (#88).
+- reconcile lost creation responses (#85).
+
+### Upgrade
+
+Extract the new examples separately and rebuild with the committed dependency locks and required GLib/D-Bus system libraries. Preserve local example configuration and keep the previous source package for rollback. Publishing these examples does not install or migrate a deployed service.
+
+### Security
+
+Retain source-distribution hash verification and the native architecture checks when building the examples. The dependency refresh does not authorize privileged deployment or establish physical-device acceptance; use test credentials for local validation.
+
 ## [0.1.6] - 2026-10-27
 
 ### Changed
